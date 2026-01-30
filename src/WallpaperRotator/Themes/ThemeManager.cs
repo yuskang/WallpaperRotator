@@ -64,9 +64,9 @@ public static class ThemeManager
 
         IsDarkTheme = isDark;
 
-        Application.Current.Dispatcher.Invoke(() =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            var mergedDictionaries = Application.Current.Resources.MergedDictionaries;
+            var mergedDictionaries = System.Windows.Application.Current.Resources.MergedDictionaries;
 
             // 移除當前主題
             if (_currentThemeDictionary != null)
