@@ -6,21 +6,22 @@ using WallpaperRotator.Core.Interfaces;
 namespace WallpaperRotator.Infrastructure.Windows;
 
 /// <summary>
-/// 螢幕方向偵測器 - 使用 WMI 事件訂閱實現事件驅動偵測
+/// 螢幕方向偵測器 - 使用 Timer 輪詢實現方向偵測
 /// </summary>
+/// <remarks>
+/// WMI Win32_DesktopMonitor 事件無法偵測螢幕旋轉，
+/// 因此使用 Timer 輪詢 GetSystemMetrics API 來偵測方向變化。
+/// </remarks>
 public sealed class OrientationDetector : IOrientationDetector
 {
     private readonly ILogger<OrientationDetector> _logger;
-    private ManagementEventWatcher? _watcher;
+    private Timer? _pollingTimer;
     private ScreenOrientation _lastOrientation;
     private bool _isMonitoring;
     private bool _disposed;
 
-    // WMI 查詢 - 監控顯示器配置變更
-    private const string WmiQuery =
-        "SELECT * FROM __InstanceModificationEvent " +
-        "WITHIN 1 " +
-        "WHERE TargetInstance ISA 'Win32_DesktopMonitor'";
+    // 輪詢間隔 (毫秒)
+    private const int PollingIntervalMs = 1000;
 
     public bool IsMonitoring => _isMonitoring;
 
@@ -61,52 +62,19 @@ public sealed class OrientationDetector : IOrientationDetector
 
         try
         {
-            _watcher = new ManagementEventWatcher(new WqlEventQuery(WmiQuery));
-            _watcher.EventArrived += OnWmiEventArrived;
-            _watcher.Start();
+            _pollingTimer = new Timer(
+                CheckOrientationCallback,
+                null,
+                TimeSpan.FromMilliseconds(PollingIntervalMs),
+                TimeSpan.FromMilliseconds(PollingIntervalMs));
 
             _isMonitoring = true;
-            _logger.LogInformation("WMI orientation monitoring started");
+            _logger.LogInformation("Orientation polling started (interval: {Interval}ms)", PollingIntervalMs);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to start WMI watcher, falling back to timer-based monitoring");
-            StartFallbackMonitoring();
+            _logger.LogError(ex, "Failed to start orientation monitoring");
         }
-    }
-
-    private void OnWmiEventArrived(object sender, EventArrivedEventArgs e)
-    {
-        try
-        {
-            var current = GetCurrentOrientation();
-
-            if (current != _lastOrientation && current != ScreenOrientation.Unknown)
-            {
-                var previous = _lastOrientation;
-                _lastOrientation = current;
-
-                _logger.LogDebug("WMI detected orientation change: {Previous} → {Current}",
-                    previous, current);
-
-                OrientationChanged?.Invoke(this, new OrientationChangedEventArgs(
-                    previous, current, DateTime.UtcNow));
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing WMI event");
-        }
-    }
-
-    private Timer? _fallbackTimer;
-
-    private void StartFallbackMonitoring()
-    {
-        _fallbackTimer = new Timer(CheckOrientationCallback, null,
-            TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
-        _isMonitoring = true;
-        _logger.LogInformation("Fallback timer-based monitoring started");
     }
 
     private void CheckOrientationCallback(object? state)
@@ -120,13 +88,16 @@ public sealed class OrientationDetector : IOrientationDetector
                 var previous = _lastOrientation;
                 _lastOrientation = current;
 
+                _logger.LogInformation("Orientation changed: {Previous} → {Current}",
+                    previous, current);
+
                 OrientationChanged?.Invoke(this, new OrientationChangedEventArgs(
                     previous, current, DateTime.UtcNow));
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in fallback orientation check");
+            _logger.LogError(ex, "Error in orientation check");
         }
     }
 
@@ -136,8 +107,8 @@ public sealed class OrientationDetector : IOrientationDetector
 
         try
         {
-            _watcher?.Stop();
-            _fallbackTimer?.Dispose();
+            _pollingTimer?.Dispose();
+            _pollingTimer = null;
             _isMonitoring = false;
             _logger.LogInformation("Orientation monitoring stopped");
         }
@@ -152,8 +123,6 @@ public sealed class OrientationDetector : IOrientationDetector
         if (_disposed) return;
 
         StopMonitoring();
-        _watcher?.Dispose();
-        _fallbackTimer?.Dispose();
         _disposed = true;
     }
 }
