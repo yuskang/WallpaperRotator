@@ -38,6 +38,8 @@ jobs:
             -r win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
+            -p:PublishTrimmed=true `
+            -p:EnableCompressionInSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -o ./publish/x64
 
@@ -48,6 +50,8 @@ jobs:
             -r win-arm64 `
             --self-contained true `
             -p:PublishSingleFile=true `
+            -p:PublishTrimmed=true `
+            -p:EnableCompressionInSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -o ./publish/arm64
 
