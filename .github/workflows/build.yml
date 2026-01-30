@@ -36,88 +36,98 @@ jobs:
           $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
           $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
 
-          # Background gradient (blue rounded rectangle)
-          $rect = New-Object System.Drawing.Rectangle(0, 0, $size, $size)
+          # === BACKGROUND: Blue gradient rounded square ===
+          $bgRect = New-Object System.Drawing.Rectangle(16, 16, 224, 224)
           $bgBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-              $rect,
-              [System.Drawing.Color]::FromArgb(0, 120, 212),
-              [System.Drawing.Color]::FromArgb(0, 90, 158),
+              $bgRect,
+              [System.Drawing.Color]::FromArgb(0, 120, 212),   # #0078D4
+              [System.Drawing.Color]::FromArgb(0, 90, 158),    # #005A9E
               [System.Drawing.Drawing2D.LinearGradientMode]::ForwardDiagonal
           )
           $cornerRadius = 48
           $bgPath = New-Object System.Drawing.Drawing2D.GraphicsPath
-          $bgPath.AddArc(0, 0, $cornerRadius * 2, $cornerRadius * 2, 180, 90)
-          $bgPath.AddArc($size - $cornerRadius * 2, 0, $cornerRadius * 2, $cornerRadius * 2, 270, 90)
-          $bgPath.AddArc($size - $cornerRadius * 2, $size - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 0, 90)
-          $bgPath.AddArc(0, $size - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 90, 90)
+          $bgPath.AddArc(16, 16, $cornerRadius * 2, $cornerRadius * 2, 180, 90)
+          $bgPath.AddArc(240 - $cornerRadius * 2, 16, $cornerRadius * 2, $cornerRadius * 2, 270, 90)
+          $bgPath.AddArc(240 - $cornerRadius * 2, 240 - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 0, 90)
+          $bgPath.AddArc(16, 240 - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 90, 90)
           $bgPath.CloseFigure()
           $g.FillPath($bgBrush, $bgPath)
 
-          # Simple clear design: Two device outlines with rotation
-          $whitePen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 8)
-          $whitePen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
-          $whiteBrush = [System.Drawing.Brushes]::White
-          $lightBlueBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(100, 255, 255, 255))
+          # Colors from SVG
+          $screenFill = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 255))
+          $screenBorder = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(204, 204, 204), 2)
+          $skyBlue = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(135, 206, 235))      # #87CEEB
+          $gold = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 215, 0))           # #FFD700
+          $forestGreen = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(34, 139, 34))    # #228B22
+          $lightBlue = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(230, 243, 255))    # #E6F3FF
+          $lightPink = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 182, 193))    # #FFB6C1
+          $paleGreen = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(152, 251, 152))    # #98FB98
 
-          # === DEVICE 1: Landscape (horizontal rectangle) - LEFT ===
-          $g.TranslateTransform(78, 90)
-          # Device frame
-          $devicePath1 = New-Object System.Drawing.Drawing2D.GraphicsPath
-          $devicePath1.AddRectangle((New-Object System.Drawing.Rectangle(0, 0, 100, 65)))
-          $g.FillPath($lightBlueBrush, $devicePath1)
-          $g.DrawPath($whitePen, $devicePath1)
-          # Screen area indicator
-          $g.DrawRectangle((New-Object System.Drawing.Pen([System.Drawing.Color]::White, 3)), 8, 8, 84, 49)
+          # === LANDSCAPE SCREEN (back, rotated -15°) ===
+          $g.TranslateTransform(128, 128)
+          $g.RotateTransform(-15)
+          $g.TranslateTransform(-128, -128)
+          # Screen frame: x=48, y=72, w=100, h=70
+          $g.FillRectangle($screenFill, 48, 72, 100, 70)
+          $g.DrawRectangle($screenBorder, 48, 72, 100, 70)
+          # Content area: x=52, y=76, w=92, h=54
+          $g.FillRectangle($skyBlue, 52, 76, 92, 54)
+          # Sun: cx=80, cy=92, r=10
+          $g.FillEllipse($gold, 70, 82, 20, 20)
+          # Mountains: path from SVG
+          $mountainPts = @(
+              (New-Object System.Drawing.Point(52, 130)),
+              (New-Object System.Drawing.Point(80, 105)),
+              (New-Object System.Drawing.Point(100, 118)),
+              (New-Object System.Drawing.Point(125, 95)),
+              (New-Object System.Drawing.Point(144, 130))
+          )
+          $g.FillPolygon($forestGreen, $mountainPts)
           $g.ResetTransform()
 
-          # === DEVICE 2: Portrait (vertical rectangle) - RIGHT ===
-          $g.TranslateTransform(138, 100)
-          # Device frame
-          $devicePath2 = New-Object System.Drawing.Drawing2D.GraphicsPath
-          $devicePath2.AddRectangle((New-Object System.Drawing.Rectangle(0, 0, 65, 100)))
-          $g.FillPath($lightBlueBrush, $devicePath2)
-          $g.DrawPath($whitePen, $devicePath2)
-          # Screen area indicator
-          $g.DrawRectangle((New-Object System.Drawing.Pen([System.Drawing.Color]::White, 3)), 8, 8, 49, 84)
+          # === PORTRAIT SCREEN (front, rotated +15°) ===
+          $g.TranslateTransform(128, 128)
+          $g.RotateTransform(15)
+          $g.TranslateTransform(-128, -128)
+          # Screen frame: x=118, y=58, w=70, h=100
+          $g.FillRectangle($screenFill, 118, 58, 70, 100)
+          $g.DrawRectangle($screenBorder, 118, 58, 70, 100)
+          # Content area: x=122, y=62, w=62, h=84
+          $g.FillRectangle($lightBlue, 122, 62, 62, 84)
+          # Pink circle: cx=153, cy=90, r=15
+          $g.FillEllipse($lightPink, 138, 75, 30, 30)
+          # Green rectangle: x=130, y=115, w=46, h=25
+          $g.FillRectangle($paleGreen, 130, 115, 46, 25)
           $g.ResetTransform()
 
-          # === ROTATION ARROWS (circular) ===
-          $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 10)
+          # === ROTATION ARROW (at 128, 188) ===
+          $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 6)
           $arrowPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
           $arrowPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-
-          # Draw circular arrow around center
-          $centerX = 128
-          $centerY = 128
-          $radius = 85
-
-          # Top-right arc with arrow
-          $arcRect1 = New-Object System.Drawing.Rectangle(($centerX - $radius), ($centerY - $radius), ($radius * 2), ($radius * 2))
-          $g.DrawArc($arrowPen, $arcRect1, 300, 60)
-          # Arrow head pointing clockwise
-          $arrow1 = @(
-              (New-Object System.Drawing.PointF(200, 75)),
-              (New-Object System.Drawing.PointF(220, 95)),
-              (New-Object System.Drawing.PointF(195, 100))
+          # Arc: center at (128,188), radius 35
+          $arcRect = New-Object System.Drawing.Rectangle(93, 153, 70, 70)
+          $g.DrawArc($arrowPen, $arcRect, 180, 225)
+          # Arrow head at top of arc, rotated -45°
+          $g.TranslateTransform(128, 188)
+          $g.RotateTransform(-45)
+          $arrowHead = @(
+              (New-Object System.Drawing.PointF(-8, -40)),
+              (New-Object System.Drawing.PointF(8, -40)),
+              (New-Object System.Drawing.PointF(0, -55))
           )
-          $g.FillPolygon($whiteBrush, $arrow1)
-
-          # Bottom-left arc with arrow
-          $g.DrawArc($arrowPen, $arcRect1, 120, 60)
-          # Arrow head pointing clockwise
-          $arrow2 = @(
-              (New-Object System.Drawing.PointF(56, 181)),
-              (New-Object System.Drawing.PointF(36, 161)),
-              (New-Object System.Drawing.PointF(61, 156))
-          )
-          $g.FillPolygon($whiteBrush, $arrow2)
+          $g.FillPolygon([System.Drawing.Brushes]::White, $arrowHead)
+          $g.ResetTransform()
 
           # Cleanup
-          $whitePen.Dispose()
-          $lightBlueBrush.Dispose()
+          $screenFill.Dispose()
+          $screenBorder.Dispose()
+          $skyBlue.Dispose()
+          $gold.Dispose()
+          $forestGreen.Dispose()
+          $lightBlue.Dispose()
+          $lightPink.Dispose()
+          $paleGreen.Dispose()
           $arrowPen.Dispose()
-          $devicePath1.Dispose()
-          $devicePath2.Dispose()
           $bgPath.Dispose()
           $bgBrush.Dispose()
           $g.Dispose()
@@ -130,7 +140,7 @@ jobs:
           $fs.Close()
           $bitmap.Dispose()
 
-          Write-Host "Icon generated: $icoPath"
+          Write-Host "Icon generated from SVG design: $icoPath"
         shell: pwsh
 
       - name: Build
