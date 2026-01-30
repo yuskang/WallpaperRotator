@@ -26,79 +26,35 @@ jobs:
 
       - name: Generate App Icon
         run: |
-          $iconPath = "src/WallpaperRotator/Resources/app.ico"
+          # Install Inkscape for SVG to PNG conversion
+          choco install inkscape -y --no-progress
+          $inkscape = "C:\Program Files\Inkscape\bin\inkscape.exe"
 
-          Add-Type -AssemblyName System.Drawing
+          $svgPath = "src/WallpaperRotator/Resources/app-icon.svg"
+          $icoPath = "src/WallpaperRotator/Resources/app.ico"
+          $tempDir = "temp_icons"
 
-          # Create 256x256 icon bitmap
-          $size = 256
-          $bitmap = New-Object System.Drawing.Bitmap($size, $size)
-          $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-          $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-          $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-          $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAlias
+          New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 
-          # Background gradient (blue)
-          $rect = New-Object System.Drawing.Rectangle(0, 0, $size, $size)
-          $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-              $rect,
-              [System.Drawing.Color]::FromArgb(0, 120, 212),
-              [System.Drawing.Color]::FromArgb(0, 90, 158),
-              [System.Drawing.Drawing2D.LinearGradientMode]::ForwardDiagonal
-          )
+          # Generate multiple PNG sizes from SVG using Inkscape
+          $sizes = @(16, 32, 48, 64, 128, 256)
+          foreach ($size in $sizes) {
+              $pngPath = "$tempDir/icon-$size.png"
+              & $inkscape --export-type=png --export-filename=$pngPath --export-width=$size --export-height=$size $svgPath
+              Write-Host "Generated: $pngPath"
+          }
 
-          # Rounded rectangle
-          $cornerRadius = 48
-          $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-          $path.AddArc(0, 0, $cornerRadius * 2, $cornerRadius * 2, 180, 90)
-          $path.AddArc($size - $cornerRadius * 2, 0, $cornerRadius * 2, $cornerRadius * 2, 270, 90)
-          $path.AddArc($size - $cornerRadius * 2, $size - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 0, 90)
-          $path.AddArc(0, $size - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 90, 90)
-          $path.CloseFigure()
-          $graphics.FillPath($brush, $path)
+          # Install ImageMagick for ICO creation
+          choco install imagemagick -y --no-progress
+          $magick = "C:\ProgramData\chocolatey\bin\magick.exe"
 
-          # Draw "WR" text
-          $font = New-Object System.Drawing.Font("Segoe UI", 90, [System.Drawing.FontStyle]::Bold)
-          $textBrush = [System.Drawing.Brushes]::White
-          $textSize = $graphics.MeasureString("WR", $font)
-          $x = ($size - $textSize.Width) / 2
-          $y = ($size - $textSize.Height) / 2 - 15
-          $graphics.DrawString("WR", $font, $textBrush, $x, $y)
+          # Combine PNGs into multi-resolution ICO
+          & $magick "$tempDir/icon-256.png" "$tempDir/icon-128.png" "$tempDir/icon-64.png" "$tempDir/icon-48.png" "$tempDir/icon-32.png" "$tempDir/icon-16.png" $icoPath
 
-          # Draw rotation arrow
-          $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 8)
-          $arrowPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-          $arrowPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-          $centerX = 128
-          $centerY = 200
-          $radius = 35
-          $arcRect = New-Object System.Drawing.RectangleF(($centerX - $radius), ($centerY - $radius), ($radius * 2), ($radius * 2))
-          $graphics.DrawArc($arrowPen, $arcRect, 180, 270)
+          # Cleanup temp files
+          Remove-Item -Recurse -Force $tempDir
 
-          # Arrow head
-          $arrowHead = @(
-              (New-Object System.Drawing.PointF(($centerX + $radius - 8), ($centerY - 12))),
-              (New-Object System.Drawing.PointF(($centerX + $radius + 8), ($centerY - 12))),
-              (New-Object System.Drawing.PointF(($centerX + $radius), ($centerY - 25)))
-          )
-          $graphics.FillPolygon([System.Drawing.Brushes]::White, $arrowHead)
-
-          # Save as ICO
-          $iconHandle = $bitmap.GetHicon()
-          $icon = [System.Drawing.Icon]::FromHandle($iconHandle)
-          $fileStream = [System.IO.File]::Create($iconPath)
-          $icon.Save($fileStream)
-          $fileStream.Close()
-
-          # Cleanup
-          $arrowPen.Dispose()
-          $font.Dispose()
-          $brush.Dispose()
-          $path.Dispose()
-          $graphics.Dispose()
-          $bitmap.Dispose()
-
-          Write-Host "Icon generated: $iconPath"
+          Write-Host "Icon generated from SVG: $icoPath"
         shell: pwsh
 
       - name: Build
