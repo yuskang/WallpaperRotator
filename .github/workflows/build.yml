@@ -30,48 +30,50 @@ jobs:
           choco install inkscape -y --no-progress
           $inkscape = "C:\Program Files\Inkscape\bin\inkscape.exe"
 
-          $svgPath = "src/WallpaperRotator/Resources/app-icon.svg"
-          $icoPath = "src/WallpaperRotator/Resources/app.ico"
-          $tempDir = "temp_icons"
+          $workDir = Get-Location
+          $svgPath = Join-Path $workDir "src/WallpaperRotator/Resources/app-icon.svg"
+          $icoPath = Join-Path $workDir "src/WallpaperRotator/Resources/app.ico"
+          $tempDir = Join-Path $workDir "temp_icons"
 
           New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 
+          Write-Host "SVG Path: $svgPath"
+          Write-Host "Temp Dir: $tempDir"
+
           # Generate multiple PNG sizes from SVG using Inkscape
-          $sizes = @(16, 32, 48, 64, 128, 256)
+          $sizes = @(256, 128, 64, 48, 32, 16)
           foreach ($size in $sizes) {
-              $pngPath = "$tempDir/icon-$size.png"
-              & $inkscape --export-type=png --export-filename=$pngPath --export-width=$size --export-height=$size $svgPath 2>$null
-              Write-Host "Generated: $pngPath"
-          }
-
-          # Find ImageMagick (pre-installed on Windows runners)
-          $magick = Get-Command magick -ErrorAction SilentlyContinue
-          if (-not $magick) {
-              # Try common installation paths
-              $paths = @(
-                  "C:\Program Files\ImageMagick*\magick.exe",
-                  "C:\ProgramData\chocolatey\lib\imagemagick*\tools\magick.exe"
-              )
-              foreach ($pattern in $paths) {
-                  $found = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
-                  if ($found) {
-                      $magick = $found.FullName
-                      break
-                  }
+              $pngPath = Join-Path $tempDir "icon-$size.png"
+              Write-Host "Generating $size x $size..."
+              & $inkscape $svgPath --export-type=png --export-filename="$pngPath" --export-width=$size --export-height=$size
+              if (Test-Path $pngPath) {
+                  Write-Host "  Created: $pngPath"
+              } else {
+                  Write-Host "  FAILED to create: $pngPath"
               }
-          } else {
-              $magick = $magick.Source
           }
 
+          # List generated files
+          Write-Host "Generated files:"
+          Get-ChildItem $tempDir
+
+          # Find ImageMagick
+          $magick = (Get-ChildItem "C:\Program Files\ImageMagick*\magick.exe" | Select-Object -First 1).FullName
           Write-Host "Using ImageMagick: $magick"
 
           # Combine PNGs into multi-resolution ICO
-          & $magick "$tempDir/icon-256.png" "$tempDir/icon-128.png" "$tempDir/icon-64.png" "$tempDir/icon-48.png" "$tempDir/icon-32.png" "$tempDir/icon-16.png" $icoPath
+          $pngFiles = @(256, 128, 64, 48, 32, 16) | ForEach-Object { Join-Path $tempDir "icon-$_.png" }
+          & $magick $pngFiles $icoPath
+
+          if (Test-Path $icoPath) {
+              Write-Host "Icon generated successfully: $icoPath"
+          } else {
+              Write-Error "Failed to generate icon"
+              exit 1
+          }
 
           # Cleanup temp files
           Remove-Item -Recurse -Force $tempDir
-
-          Write-Host "Icon generated from SVG: $icoPath"
         shell: pwsh
 
       - name: Build
