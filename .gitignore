@@ -1,0 +1,28 @@
+# Build outputs
+bin/
+obj/
+publish/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Test results
+TestResults/
+
+# NuGet
+*.nupkg
+packages/
+
+# Rider
+.idea/
+.DS_Store

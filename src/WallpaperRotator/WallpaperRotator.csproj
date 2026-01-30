@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>WallpaperRotator</RootNamespace>
+    <AssemblyName>WallpaperRotator</AssemblyName>
+    <Description>Windows Wallpaper Auto-Rotator for Tablet Mode</Description>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <StartupObject>WallpaperRotator.Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WallpaperRotator.Core\WallpaperRotator.Core.csproj" />
+    <ProjectReference Include="..\WallpaperRotator.Application\WallpaperRotator.Application.csproj" />
+    <ProjectReference Include="..\WallpaperRotator.Infrastructure\WallpaperRotator.Infrastructure.csproj" />
+    <ProjectReference Include="..\WallpaperRotator.Presentation\WallpaperRotator.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
