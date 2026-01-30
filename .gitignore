@@ -3,9 +3,8 @@ bin/
 obj/
 publish/
 
-# Source code (keep local only)
+# Scripts (keep local only)
 scripts/
-src/
 tests/
 
 # IDE

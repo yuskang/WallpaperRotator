@@ -1,0 +1,281 @@
+<Window x:Class="WallpaperRotator.Views.TrayIconWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        Title="WallpaperRotator"
+        Visibility="Hidden"
+        ShowInTaskbar="False"
+        WindowStyle="None"
+        Width="0" Height="0">
+
+    <Window.Resources>
+        <!-- Modern Context Menu Style -->
+        <Style x:Key="TrayContextMenuStyle" TargetType="ContextMenu">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="FontFamily" Value="{StaticResource DefaultFontFamily}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}"
+                                MinWidth="200">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" Opacity="0.2" BlurRadius="20" ShadowDepth="4"/>
+                            </Border.Effect>
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Status Header MenuItem Style -->
+        <Style x:Key="StatusMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="FontFamily" Value="{StaticResource DefaultFontFamily}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="IsEnabled" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border Background="Transparent"
+                                Padding="{TemplateBinding Padding}"
+                                Margin="2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Status Indicator Dot -->
+                                <Ellipse x:Name="StatusDot"
+                                         Grid.Column="0"
+                                         Width="8" Height="8"
+                                         Fill="{DynamicResource SuccessBrush}"
+                                         Margin="0,0,10,0"
+                                         VerticalAlignment="Center"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  ContentSource="Header"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Normal MenuItem Style -->
+        <Style x:Key="TrayMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="FontFamily" Value="{StaticResource DefaultFontFamily}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="border"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Margin="2"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Icon placeholder -->
+                                <ContentPresenter x:Name="Icon"
+                                                  Grid.Column="0"
+                                                  ContentSource="Icon"
+                                                  Width="16" Height="16"
+                                                  VerticalAlignment="Center"/>
+                                <!-- Header text -->
+                                <ContentPresenter Grid.Column="1"
+                                                  ContentSource="Header"
+                                                  VerticalAlignment="Center"/>
+                                <!-- Check mark for checkable items -->
+                                <Path x:Name="checkMark"
+                                      Grid.Column="2"
+                                      Data="M0,5 L3,8 L8,0"
+                                      Stroke="{DynamicResource PrimaryBrush}"
+                                      StrokeThickness="2"
+                                      Visibility="Collapsed"
+                                      Margin="10,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Width="10" Height="10"
+                                      Stretch="Uniform"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="checkMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Action MenuItem Style (with accent color on hover) -->
+        <Style x:Key="ActionMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="border"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Margin="2"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Icon -->
+                                <Path x:Name="actionIcon"
+                                      Grid.Column="0"
+                                      Data="M8,0 L10,6 L16,6 L11,10 L13,16 L8,12 L3,16 L5,10 L0,6 L6,6 Z"
+                                      Fill="{DynamicResource TextSecondaryBrush}"
+                                      Width="14" Height="14"
+                                      Stretch="Uniform"
+                                      VerticalAlignment="Center"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  ContentSource="Header"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                                <Setter TargetName="actionIcon" Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Exit MenuItem Style (with warning color) -->
+        <Style x:Key="ExitMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="border"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Margin="2"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Exit Icon -->
+                                <Path x:Name="exitIcon"
+                                      Grid.Column="0"
+                                      Data="M0,0 L8,8 M8,0 L0,8"
+                                      Stroke="{DynamicResource TextSecondaryBrush}"
+                                      StrokeThickness="2"
+                                      Width="10" Height="10"
+                                      Stretch="Uniform"
+                                      VerticalAlignment="Center"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  ContentSource="Header"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="{DynamicResource ErrorColor}" Opacity="0.1"/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="exitIcon" Property="Stroke" Value="{DynamicResource ErrorBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Separator Style -->
+        <Style x:Key="TraySeparatorStyle" TargetType="Separator">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Margin" Value="12,6"/>
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Background="{TemplateBinding Background}"
+                                Height="{TemplateBinding Height}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <tb:TaskbarIcon x:Name="TrayIcon"
+                        ToolTipText="{Binding ToolTipText}"
+                        DoubleClickCommand="{Binding ToggleEnabledCommand}">
+
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu Style="{StaticResource TrayContextMenuStyle}">
+                    <!-- Status Header -->
+                    <MenuItem Header="{Binding StatusText}"
+                              Style="{StaticResource StatusMenuItemStyle}"/>
+
+                    <Separator Style="{StaticResource TraySeparatorStyle}"/>
+
+                    <!-- Enable Toggle -->
+                    <MenuItem Header="啟用自動切換"
+                              IsCheckable="True"
+                              IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                              Style="{StaticResource TrayMenuItemStyle}"/>
+
+                    <Separator Style="{StaticResource TraySeparatorStyle}"/>
+
+                    <!-- Quick Switch Actions -->
+                    <MenuItem Header="立即切換: 橫向"
+                              Command="{Binding SwitchToLandscapeCommand}"
+                              Style="{StaticResource ActionMenuItemStyle}"/>
+                    <MenuItem Header="立即切換: 直向"
+                              Command="{Binding SwitchToPortraitCommand}"
+                              Style="{StaticResource ActionMenuItemStyle}"/>
+
+                    <Separator Style="{StaticResource TraySeparatorStyle}"/>
+
+                    <!-- Settings -->
+                    <MenuItem Header="設定..."
+                              Command="{Binding OpenSettingsCommand}"
+                              Style="{StaticResource TrayMenuItemStyle}"/>
+
+                    <Separator Style="{StaticResource TraySeparatorStyle}"/>
+
+                    <!-- Exit -->
+                    <MenuItem Header="結束"
+                              Command="{Binding ExitCommand}"
+                              Style="{StaticResource ExitMenuItemStyle}"/>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+    </Grid>
+</Window>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>WallpaperRotator.Presentation</RootNamespace>
+    <AssemblyName>WallpaperRotator.Presentation</AssemblyName>
+    <Description>Presentation layer for WallpaperRotator</Description>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WallpaperRotator.Core\WallpaperRotator.Core.csproj" />
+    <ProjectReference Include="..\WallpaperRotator.Application\WallpaperRotator.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
+  </ItemGroup>
+
+</Project>
