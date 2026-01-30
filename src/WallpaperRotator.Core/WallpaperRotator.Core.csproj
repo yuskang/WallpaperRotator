@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <RootNamespace>WallpaperRotator.Core</RootNamespace>
-    <AssemblyName>WallpaperRotator.Core</AssemblyName>
-    <Description>Core domain models and interfaces for WallpaperRotator</Description>
-  </PropertyGroup>
-
-</Project>
