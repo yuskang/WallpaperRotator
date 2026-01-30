@@ -11,6 +11,7 @@ using WallpaperRotator.Infrastructure.Startup;
 using WallpaperRotator.Infrastructure.Storage;
 using WallpaperRotator.Infrastructure.Windows;
 using WallpaperRotator.Presentation.ViewModels;
+using WallpaperRotator.Themes;
 using WallpaperRotator.Views;
 
 namespace WallpaperRotator;
@@ -29,6 +30,9 @@ public partial class App : System.Windows.Application
 
         // 設定 Serilog
         ConfigureLogging();
+
+        // 初始化主題管理器
+        ThemeManager.Initialize();
 
         // 建立 Host
         _host = CreateHostBuilder(e.Args).Build();
@@ -65,6 +69,7 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<IWallpaperApplier, WallpaperApplier>();
                 services.AddSingleton<IConfigurationStore, JsonConfigurationStore>();
                 services.AddSingleton<AutoStartManager>();
+                services.AddSingleton<IWallpaperTransition, NoTransition>();
 
                 // Application Services
                 services.AddSingleton<WallpaperService>();
@@ -149,6 +154,9 @@ public partial class App : System.Windows.Application
             await _host.StopAsync();
             _host.Dispose();
         }
+
+        // 清理主題管理器
+        ThemeManager.Cleanup();
 
         Log.CloseAndFlush();
         base.OnExit(e);
