@@ -28,6 +28,7 @@
     <None Update="Resources\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Resources\app-icon.ico" />
   </ItemGroup>
 
 </Project>
