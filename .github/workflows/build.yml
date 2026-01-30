@@ -53,79 +53,71 @@ jobs:
           $bgPath.CloseFigure()
           $g.FillPath($bgBrush, $bgPath)
 
-          # Common colors
+          # Simple clear design: Two device outlines with rotation
+          $whitePen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 8)
+          $whitePen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
           $whiteBrush = [System.Drawing.Brushes]::White
-          $framePen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(200, 200, 200), 4)
-          $shadowBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(50, 0, 0, 0))
+          $lightBlueBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(100, 255, 255, 255))
 
-          # === LANDSCAPE MONITOR (left-back) ===
-          $g.TranslateTransform(95, 95)
-          $g.RotateTransform(-20)
-          # Shadow
-          $g.FillRectangle($shadowBrush, 6, 6, 110, 75)
-          # Screen frame (white with border)
-          $g.FillRectangle($whiteBrush, 0, 0, 110, 75)
-          $g.DrawRectangle($framePen, 0, 0, 110, 75)
-          # Screen content - gradient sky
-          $skyRect = New-Object System.Drawing.Rectangle(6, 6, 98, 50)
-          $skyBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-              $skyRect,
-              [System.Drawing.Color]::FromArgb(135, 206, 250),
-              [System.Drawing.Color]::FromArgb(70, 130, 180),
-              [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
-          )
-          $g.FillRectangle($skyBrush, 6, 6, 98, 63)
-          # Sun
-          $g.FillEllipse([System.Drawing.Brushes]::Gold, 12, 12, 22, 22)
-          # Mountains
-          $mountainPts = @(
-              (New-Object System.Drawing.Point(6, 69)),
-              (New-Object System.Drawing.Point(30, 35)),
-              (New-Object System.Drawing.Point(50, 50)),
-              (New-Object System.Drawing.Point(80, 25)),
-              (New-Object System.Drawing.Point(104, 69))
-          )
-          $g.FillPolygon([System.Drawing.Brushes]::ForestGreen, $mountainPts)
+          # === DEVICE 1: Landscape (horizontal rectangle) - LEFT ===
+          $g.TranslateTransform(78, 90)
+          # Device frame
+          $devicePath1 = New-Object System.Drawing.Drawing2D.GraphicsPath
+          $devicePath1.AddRectangle((New-Object System.Drawing.Rectangle(0, 0, 100, 65)))
+          $g.FillPath($lightBlueBrush, $devicePath1)
+          $g.DrawPath($whitePen, $devicePath1)
+          # Screen area indicator
+          $g.DrawRectangle((New-Object System.Drawing.Pen([System.Drawing.Color]::White, 3)), 8, 8, 84, 49)
           $g.ResetTransform()
 
-          # === PORTRAIT MONITOR (right-front) ===
-          $g.TranslateTransform(135, 85)
-          $g.RotateTransform(20)
-          # Shadow
-          $g.FillRectangle($shadowBrush, 6, 6, 75, 110)
-          # Screen frame
-          $g.FillRectangle($whiteBrush, 0, 0, 75, 110)
-          $g.DrawRectangle($framePen, 0, 0, 75, 110)
-          # Screen content - abstract UI
-          $g.FillRectangle([System.Drawing.Brushes]::AliceBlue, 6, 6, 63, 98)
-          # Header bar
-          $g.FillRectangle([System.Drawing.Brushes]::CornflowerBlue, 6, 6, 63, 18)
-          # Profile circle
-          $g.FillEllipse([System.Drawing.Brushes]::LightCoral, 22, 32, 30, 30)
-          # Content lines
-          $g.FillRectangle([System.Drawing.Brushes]::LightGray, 12, 70, 50, 8)
-          $g.FillRectangle([System.Drawing.Brushes]::LightGray, 12, 84, 40, 8)
+          # === DEVICE 2: Portrait (vertical rectangle) - RIGHT ===
+          $g.TranslateTransform(138, 100)
+          # Device frame
+          $devicePath2 = New-Object System.Drawing.Drawing2D.GraphicsPath
+          $devicePath2.AddRectangle((New-Object System.Drawing.Rectangle(0, 0, 65, 100)))
+          $g.FillPath($lightBlueBrush, $devicePath2)
+          $g.DrawPath($whitePen, $devicePath2)
+          # Screen area indicator
+          $g.DrawRectangle((New-Object System.Drawing.Pen([System.Drawing.Color]::White, 3)), 8, 8, 49, 84)
           $g.ResetTransform()
 
-          # === ROTATION ARROW (bottom center) ===
+          # === ROTATION ARROWS (circular) ===
           $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 10)
           $arrowPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
           $arrowPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-          $arcRect = New-Object System.Drawing.Rectangle(88, 175, 80, 60)
-          $g.DrawArc($arrowPen, $arcRect, 200, 240)
-          # Arrow head (triangle)
-          $arrowHead = @(
-              (New-Object System.Drawing.PointF(155, 198)),
-              (New-Object System.Drawing.PointF(175, 205)),
-              (New-Object System.Drawing.PointF(160, 180))
+
+          # Draw circular arrow around center
+          $centerX = 128
+          $centerY = 128
+          $radius = 85
+
+          # Top-right arc with arrow
+          $arcRect1 = New-Object System.Drawing.Rectangle(($centerX - $radius), ($centerY - $radius), ($radius * 2), ($radius * 2))
+          $g.DrawArc($arrowPen, $arcRect1, 300, 60)
+          # Arrow head pointing clockwise
+          $arrow1 = @(
+              (New-Object System.Drawing.PointF(200, 75)),
+              (New-Object System.Drawing.PointF(220, 95)),
+              (New-Object System.Drawing.PointF(195, 100))
           )
-          $g.FillPolygon([System.Drawing.Brushes]::White, $arrowHead)
+          $g.FillPolygon($whiteBrush, $arrow1)
+
+          # Bottom-left arc with arrow
+          $g.DrawArc($arrowPen, $arcRect1, 120, 60)
+          # Arrow head pointing clockwise
+          $arrow2 = @(
+              (New-Object System.Drawing.PointF(56, 181)),
+              (New-Object System.Drawing.PointF(36, 161)),
+              (New-Object System.Drawing.PointF(61, 156))
+          )
+          $g.FillPolygon($whiteBrush, $arrow2)
 
           # Cleanup
-          $framePen.Dispose()
-          $shadowBrush.Dispose()
-          $skyBrush.Dispose()
+          $whitePen.Dispose()
+          $lightBlueBrush.Dispose()
           $arrowPen.Dispose()
+          $devicePath1.Dispose()
+          $devicePath2.Dispose()
           $bgPath.Dispose()
           $bgBrush.Dispose()
           $g.Dispose()
