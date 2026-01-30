@@ -6,7 +6,6 @@
     <AssemblyName>WallpaperRotator</AssemblyName>
     <Description>Windows Wallpaper Auto-Rotator for Tablet Mode</Description>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <StartupObject>WallpaperRotator.Program</StartupObject>
   </PropertyGroup>
 
