@@ -40,13 +40,30 @@ jobs:
           $sizes = @(16, 32, 48, 64, 128, 256)
           foreach ($size in $sizes) {
               $pngPath = "$tempDir/icon-$size.png"
-              & $inkscape --export-type=png --export-filename=$pngPath --export-width=$size --export-height=$size $svgPath
+              & $inkscape --export-type=png --export-filename=$pngPath --export-width=$size --export-height=$size $svgPath 2>$null
               Write-Host "Generated: $pngPath"
           }
 
-          # Install ImageMagick for ICO creation
-          choco install imagemagick -y --no-progress
-          $magick = "C:\ProgramData\chocolatey\bin\magick.exe"
+          # Find ImageMagick (pre-installed on Windows runners)
+          $magick = Get-Command magick -ErrorAction SilentlyContinue
+          if (-not $magick) {
+              # Try common installation paths
+              $paths = @(
+                  "C:\Program Files\ImageMagick*\magick.exe",
+                  "C:\ProgramData\chocolatey\lib\imagemagick*\tools\magick.exe"
+              )
+              foreach ($pattern in $paths) {
+                  $found = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
+                  if ($found) {
+                      $magick = $found.FullName
+                      break
+                  }
+              }
+          } else {
+              $magick = $magick.Source
+          }
+
+          Write-Host "Using ImageMagick: $magick"
 
           # Combine PNGs into multi-resolution ICO
           & $magick "$tempDir/icon-256.png" "$tempDir/icon-128.png" "$tempDir/icon-64.png" "$tempDir/icon-48.png" "$tempDir/icon-32.png" "$tempDir/icon-16.png" $icoPath
