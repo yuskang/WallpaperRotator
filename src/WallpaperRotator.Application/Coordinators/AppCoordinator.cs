@@ -18,7 +18,6 @@ public sealed class AppCoordinator : IHostedService, IDisposable
     private readonly IEventBus _eventBus;
     private readonly ILogger<AppCoordinator> _logger;
 
-    private IDisposable? _orientationSubscription;
     private bool _isEnabled = true;
     private ScreenOrientation _lastOrientation = ScreenOrientation.Unknown;
 
@@ -136,7 +135,6 @@ public sealed class AppCoordinator : IHostedService, IDisposable
 
     public void Dispose()
     {
-        _orientationSubscription?.Dispose();
         _orientationDetector.Dispose();
         _wallpaperService.Dispose();
     }
