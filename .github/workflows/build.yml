@@ -26,54 +26,98 @@ jobs:
 
       - name: Generate App Icon
         run: |
-          # Install Inkscape for SVG to PNG conversion
-          choco install inkscape -y --no-progress
-          $inkscape = "C:\Program Files\Inkscape\bin\inkscape.exe"
+          $icoPath = "src/WallpaperRotator/Resources/app.ico"
 
-          $workDir = Get-Location
-          $svgPath = Join-Path $workDir "src/WallpaperRotator/Resources/app-icon.svg"
-          $icoPath = Join-Path $workDir "src/WallpaperRotator/Resources/app.ico"
-          $tempDir = Join-Path $workDir "temp_icons"
+          Add-Type -AssemblyName System.Drawing
 
-          New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+          $size = 256
+          $bitmap = New-Object System.Drawing.Bitmap($size, $size)
+          $g = [System.Drawing.Graphics]::FromImage($bitmap)
+          $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+          $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+          $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAlias
 
-          Write-Host "SVG Path: $svgPath"
-          Write-Host "Temp Dir: $tempDir"
+          # Background gradient (blue rounded rectangle)
+          $rect = New-Object System.Drawing.Rectangle(0, 0, $size, $size)
+          $bgBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+              $rect,
+              [System.Drawing.Color]::FromArgb(0, 120, 212),
+              [System.Drawing.Color]::FromArgb(0, 90, 158),
+              [System.Drawing.Drawing2D.LinearGradientMode]::ForwardDiagonal
+          )
+          $cornerRadius = 48
+          $bgPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+          $bgPath.AddArc(0, 0, $cornerRadius * 2, $cornerRadius * 2, 180, 90)
+          $bgPath.AddArc($size - $cornerRadius * 2, 0, $cornerRadius * 2, $cornerRadius * 2, 270, 90)
+          $bgPath.AddArc($size - $cornerRadius * 2, $size - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 0, 90)
+          $bgPath.AddArc(0, $size - $cornerRadius * 2, $cornerRadius * 2, $cornerRadius * 2, 90, 90)
+          $bgPath.CloseFigure()
+          $g.FillPath($bgBrush, $bgPath)
 
-          # Generate multiple PNG sizes from SVG using Inkscape
-          $sizes = @(256, 128, 64, 48, 32, 16)
-          foreach ($size in $sizes) {
-              $pngPath = Join-Path $tempDir "icon-$size.png"
-              Write-Host "Generating $size x $size..."
-              & $inkscape $svgPath --export-type=png --export-filename="$pngPath" --export-width=$size --export-height=$size
-              if (Test-Path $pngPath) {
-                  Write-Host "  Created: $pngPath"
-              } else {
-                  Write-Host "  FAILED to create: $pngPath"
-              }
-          }
+          # Landscape screen (back, rotated -15 degrees)
+          $g.TranslateTransform(128, 108)
+          $g.RotateTransform(-15)
+          $screenBrush = [System.Drawing.Brushes]::White
+          $screenPen = New-Object System.Drawing.Pen([System.Drawing.Color]::LightGray, 2)
+          $g.FillRectangle($screenBrush, -50, -35, 100, 70)
+          $g.DrawRectangle($screenPen, -50, -35, 100, 70)
+          # Sky and mountain
+          $g.FillRectangle([System.Drawing.Brushes]::LightSkyBlue, -46, -31, 92, 54)
+          $sunBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::Gold)
+          $g.FillEllipse($sunBrush, -38, -25, 20, 20)
+          $mountainPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+          $mountainPath.AddPolygon(@(
+              (New-Object System.Drawing.Point(-46, 23)),
+              (New-Object System.Drawing.Point(-20, -5)),
+              (New-Object System.Drawing.Point(0, 10)),
+              (New-Object System.Drawing.Point(30, -15)),
+              (New-Object System.Drawing.Point(46, 23))
+          ))
+          $g.FillPath([System.Drawing.Brushes]::ForestGreen, $mountainPath)
+          $g.ResetTransform()
 
-          # List generated files
-          Write-Host "Generated files:"
-          Get-ChildItem $tempDir
+          # Portrait screen (front, rotated +15 degrees)
+          $g.TranslateTransform(148, 118)
+          $g.RotateTransform(15)
+          $g.FillRectangle($screenBrush, -35, -50, 70, 100)
+          $g.DrawRectangle($screenPen, -35, -50, 70, 100)
+          # Abstract content
+          $g.FillRectangle([System.Drawing.Brushes]::AliceBlue, -31, -46, 62, 84)
+          $g.FillEllipse([System.Drawing.Brushes]::LightPink, -15, -35, 30, 30)
+          $g.FillRectangle([System.Drawing.Brushes]::PaleGreen, -23, 5, 46, 25)
+          $g.ResetTransform()
 
-          # Find ImageMagick
-          $magick = (Get-ChildItem "C:\Program Files\ImageMagick*\magick.exe" | Select-Object -First 1).FullName
-          Write-Host "Using ImageMagick: $magick"
+          # Rotation arrow at bottom
+          $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 6)
+          $arrowPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+          $arrowPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+          $arcRect = New-Object System.Drawing.Rectangle(93, 153, 70, 70)
+          $g.DrawArc($arrowPen, $arcRect, 180, 270)
+          # Arrow head
+          $arrowHead = @(
+              (New-Object System.Drawing.PointF(155, 180)),
+              (New-Object System.Drawing.PointF(171, 180)),
+              (New-Object System.Drawing.PointF(163, 165))
+          )
+          $g.FillPolygon([System.Drawing.Brushes]::White, $arrowHead)
 
-          # Combine PNGs into multi-resolution ICO
-          $pngFiles = @(256, 128, 64, 48, 32, 16) | ForEach-Object { Join-Path $tempDir "icon-$_.png" }
-          & $magick $pngFiles $icoPath
+          # Cleanup and save
+          $screenPen.Dispose()
+          $arrowPen.Dispose()
+          $sunBrush.Dispose()
+          $mountainPath.Dispose()
+          $bgPath.Dispose()
+          $bgBrush.Dispose()
+          $g.Dispose()
 
-          if (Test-Path $icoPath) {
-              Write-Host "Icon generated successfully: $icoPath"
-          } else {
-              Write-Error "Failed to generate icon"
-              exit 1
-          }
+          $iconHandle = $bitmap.GetHicon()
+          $icon = [System.Drawing.Icon]::FromHandle($iconHandle)
+          $fs = [System.IO.File]::Create($icoPath)
+          $icon.Save($fs)
+          $fs.Close()
+          $bitmap.Dispose()
 
-          # Cleanup temp files
-          Remove-Item -Recurse -Force $tempDir
+          Write-Host "Icon generated: $icoPath"
         shell: pwsh
 
       - name: Build
