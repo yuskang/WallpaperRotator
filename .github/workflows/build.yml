@@ -85,12 +85,17 @@ jobs:
           name: WallpaperRotator-arm64
           path: ./arm64
 
+      - name: Rename artifacts
+        run: |
+          mv ./x64/WallpaperRotator.exe ./x64/WallpaperRotator-x64.exe
+          mv ./arm64/WallpaperRotator.exe ./arm64/WallpaperRotator-arm64.exe
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./x64/WallpaperRotator.exe
-            ./arm64/WallpaperRotator.exe
+            ./x64/WallpaperRotator-x64.exe
+            ./arm64/WallpaperRotator-arm64.exe
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
