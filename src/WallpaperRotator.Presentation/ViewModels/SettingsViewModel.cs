@@ -31,7 +31,13 @@ public sealed class SettingsViewModel : ViewModelBase
     public bool HasUnsavedChanges
     {
         get => _hasUnsavedChanges;
-        private set => SetProperty(ref _hasUnsavedChanges, value);
+        private set
+        {
+            if (SetProperty(ref _hasUnsavedChanges, value))
+            {
+                SaveCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
     public bool IsLoading
@@ -85,7 +91,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public IEnumerable<DisplayMode> DisplayModes => Enum.GetValues<DisplayMode>();
 
     // Commands
-    public ICommand SaveCommand { get; }
+    public AsyncRelayCommand SaveCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand ResetCommand { get; }
     public ICommand BrowseLandscapeCommand { get; }
