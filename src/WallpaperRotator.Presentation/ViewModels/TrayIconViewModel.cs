@@ -29,7 +29,7 @@ public sealed class TrayIconViewModel : ViewModelBase, IDisposable
         {
             if (SetProperty(ref _isEnabled, value))
             {
-                _coordinator.SetEnabled(value);
+                _ = _coordinator.SetEnabledAsync(value);
                 UpdateStatusText();
             }
         }
