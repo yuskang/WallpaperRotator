@@ -68,7 +68,7 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<IOrientationDetector, OrientationDetector>();
                 services.AddSingleton<IWallpaperApplier, WallpaperApplier>();
                 services.AddSingleton<IConfigurationStore, JsonConfigurationStore>();
-                services.AddSingleton<AutoStartManager>();
+                services.AddSingleton<IAutoStartManager, AutoStartManager>();
                 services.AddSingleton<IWallpaperTransition, NoTransition>();
 
                 // Application Services

@@ -4,7 +4,6 @@ using WallpaperRotator.Core.Enums;
 using WallpaperRotator.Core.Events;
 using WallpaperRotator.Core.Interfaces;
 using WallpaperRotator.Application.Services;
-using WallpaperRotator.Infrastructure.Startup;
 
 namespace WallpaperRotator.Application.Coordinators;
 
@@ -18,7 +17,7 @@ public sealed class AppCoordinator : IHostedService, IDisposable
     private readonly WallpaperService _wallpaperService;
     private readonly IConfigurationStore _configStore;
     private readonly IEventBus _eventBus;
-    private readonly AutoStartManager _autoStartManager;
+    private readonly IAutoStartManager _autoStartManager;
     private readonly ILogger<AppCoordinator> _logger;
 
     private bool _isEnabled = true;
@@ -33,7 +32,7 @@ public sealed class AppCoordinator : IHostedService, IDisposable
         WallpaperService wallpaperService,
         IConfigurationStore configStore,
         IEventBus eventBus,
-        AutoStartManager autoStartManager,
+        IAutoStartManager autoStartManager,
         ILogger<AppCoordinator> logger)
     {
         _orientationDetector = orientationDetector;

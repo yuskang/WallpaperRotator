@@ -1,35 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using WallpaperRotator.Core.Interfaces;
 
 namespace WallpaperRotator.Infrastructure.Startup;
 
 /// <summary>
-/// 自動啟動操作結果
-/// </summary>
-public sealed class AutoStartResult
-{
-    public bool Success { get; init; }
-    public string? ErrorMessage { get; init; }
-    public bool CurrentState { get; init; }
-
-    public static AutoStartResult Succeeded(bool currentState) => new()
-    {
-        Success = true,
-        CurrentState = currentState
-    };
-
-    public static AutoStartResult Failed(string errorMessage, bool currentState = false) => new()
-    {
-        Success = false,
-        ErrorMessage = errorMessage,
-        CurrentState = currentState
-    };
-}
-
-/// <summary>
 /// 開機自動啟動管理器 - 支援配置同步和錯誤恢復
 /// </summary>
-public sealed class AutoStartManager : IDisposable
+public sealed class AutoStartManager : IAutoStartManager
 {
     private readonly ILogger<AutoStartManager> _logger;
     private const string RegistryKeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
