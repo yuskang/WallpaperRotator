@@ -15,12 +15,12 @@
     </filter>
   </defs>
 
-  <!-- Background rounded square -->
-  <rect x="16" y="16" width="224" height="224" rx="48" ry="48" fill="url(#bgGradient)"/>
+  <!-- Background - full coverage, no white border -->
+  <rect x="0" y="0" width="256" height="256" rx="40" ry="40" fill="url(#bgGradient)"/>
 
   <!-- Landscape screen (back) -->
   <g transform="translate(128, 128) rotate(-15) translate(-128, -128)" filter="url(#shadow)">
-    <rect x="48" y="72" width="100" height="70" rx="6" ry="6" fill="url(#screenGradient)" stroke="#CCCCCC" stroke-width="2"/>
+    <rect x="48" y="72" width="100" height="70" rx="6" ry="6" fill="url(#screenGradient)"/>
     <!-- Landscape content - mountain/sun -->
     <rect x="52" y="76" width="92" height="54" rx="3" ry="3" fill="#87CEEB"/>
     <circle cx="80" cy="92" r="10" fill="#FFD700"/>
@@ -29,7 +29,7 @@
 
   <!-- Portrait screen (front) -->
   <g transform="translate(128, 128) rotate(15) translate(-128, -128)" filter="url(#shadow)">
-    <rect x="118" y="58" width="70" height="100" rx="6" ry="6" fill="url(#screenGradient)" stroke="#CCCCCC" stroke-width="2"/>
+    <rect x="118" y="58" width="70" height="100" rx="6" ry="6" fill="url(#screenGradient)"/>
     <!-- Portrait content - abstract image -->
     <rect x="122" y="62" width="62" height="84" rx="3" ry="3" fill="#E6F3FF"/>
     <circle cx="153" cy="90" r="15" fill="#FFB6C1"/>
