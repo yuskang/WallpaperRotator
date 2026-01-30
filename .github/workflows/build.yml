@@ -35,7 +35,6 @@ jobs:
           $g = [System.Drawing.Graphics]::FromImage($bitmap)
           $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
           $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-          $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAlias
 
           # Background gradient (blue rounded rectangle)
           $rect = New-Object System.Drawing.Rectangle(0, 0, $size, $size)
@@ -54,62 +53,84 @@ jobs:
           $bgPath.CloseFigure()
           $g.FillPath($bgBrush, $bgPath)
 
-          # Landscape screen (back, rotated -15 degrees)
-          $g.TranslateTransform(128, 108)
-          $g.RotateTransform(-15)
-          $screenBrush = [System.Drawing.Brushes]::White
-          $screenPen = New-Object System.Drawing.Pen([System.Drawing.Color]::LightGray, 2)
-          $g.FillRectangle($screenBrush, -50, -35, 100, 70)
-          $g.DrawRectangle($screenPen, -50, -35, 100, 70)
-          # Sky and mountain
-          $g.FillRectangle([System.Drawing.Brushes]::LightSkyBlue, -46, -31, 92, 54)
-          $sunBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::Gold)
-          $g.FillEllipse($sunBrush, -38, -25, 20, 20)
-          $mountainPath = New-Object System.Drawing.Drawing2D.GraphicsPath
-          $mountainPath.AddPolygon(@(
-              (New-Object System.Drawing.Point(-46, 23)),
-              (New-Object System.Drawing.Point(-20, -5)),
-              (New-Object System.Drawing.Point(0, 10)),
-              (New-Object System.Drawing.Point(30, -15)),
-              (New-Object System.Drawing.Point(46, 23))
-          ))
-          $g.FillPath([System.Drawing.Brushes]::ForestGreen, $mountainPath)
+          # Common colors
+          $whiteBrush = [System.Drawing.Brushes]::White
+          $framePen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(200, 200, 200), 4)
+          $shadowBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(50, 0, 0, 0))
+
+          # === LANDSCAPE MONITOR (left-back) ===
+          $g.TranslateTransform(95, 95)
+          $g.RotateTransform(-20)
+          # Shadow
+          $g.FillRectangle($shadowBrush, 6, 6, 110, 75)
+          # Screen frame (white with border)
+          $g.FillRectangle($whiteBrush, 0, 0, 110, 75)
+          $g.DrawRectangle($framePen, 0, 0, 110, 75)
+          # Screen content - gradient sky
+          $skyRect = New-Object System.Drawing.Rectangle(6, 6, 98, 50)
+          $skyBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+              $skyRect,
+              [System.Drawing.Color]::FromArgb(135, 206, 250),
+              [System.Drawing.Color]::FromArgb(70, 130, 180),
+              [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
+          )
+          $g.FillRectangle($skyBrush, 6, 6, 98, 63)
+          # Sun
+          $g.FillEllipse([System.Drawing.Brushes]::Gold, 12, 12, 22, 22)
+          # Mountains
+          $mountainPts = @(
+              (New-Object System.Drawing.Point(6, 69)),
+              (New-Object System.Drawing.Point(30, 35)),
+              (New-Object System.Drawing.Point(50, 50)),
+              (New-Object System.Drawing.Point(80, 25)),
+              (New-Object System.Drawing.Point(104, 69))
+          )
+          $g.FillPolygon([System.Drawing.Brushes]::ForestGreen, $mountainPts)
           $g.ResetTransform()
 
-          # Portrait screen (front, rotated +15 degrees)
-          $g.TranslateTransform(148, 118)
-          $g.RotateTransform(15)
-          $g.FillRectangle($screenBrush, -35, -50, 70, 100)
-          $g.DrawRectangle($screenPen, -35, -50, 70, 100)
-          # Abstract content
-          $g.FillRectangle([System.Drawing.Brushes]::AliceBlue, -31, -46, 62, 84)
-          $g.FillEllipse([System.Drawing.Brushes]::LightPink, -15, -35, 30, 30)
-          $g.FillRectangle([System.Drawing.Brushes]::PaleGreen, -23, 5, 46, 25)
+          # === PORTRAIT MONITOR (right-front) ===
+          $g.TranslateTransform(135, 85)
+          $g.RotateTransform(20)
+          # Shadow
+          $g.FillRectangle($shadowBrush, 6, 6, 75, 110)
+          # Screen frame
+          $g.FillRectangle($whiteBrush, 0, 0, 75, 110)
+          $g.DrawRectangle($framePen, 0, 0, 75, 110)
+          # Screen content - abstract UI
+          $g.FillRectangle([System.Drawing.Brushes]::AliceBlue, 6, 6, 63, 98)
+          # Header bar
+          $g.FillRectangle([System.Drawing.Brushes]::CornflowerBlue, 6, 6, 63, 18)
+          # Profile circle
+          $g.FillEllipse([System.Drawing.Brushes]::LightCoral, 22, 32, 30, 30)
+          # Content lines
+          $g.FillRectangle([System.Drawing.Brushes]::LightGray, 12, 70, 50, 8)
+          $g.FillRectangle([System.Drawing.Brushes]::LightGray, 12, 84, 40, 8)
           $g.ResetTransform()
 
-          # Rotation arrow at bottom
-          $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 6)
+          # === ROTATION ARROW (bottom center) ===
+          $arrowPen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 10)
           $arrowPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
           $arrowPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-          $arcRect = New-Object System.Drawing.Rectangle(93, 153, 70, 70)
-          $g.DrawArc($arrowPen, $arcRect, 180, 270)
-          # Arrow head
+          $arcRect = New-Object System.Drawing.Rectangle(88, 175, 80, 60)
+          $g.DrawArc($arrowPen, $arcRect, 200, 240)
+          # Arrow head (triangle)
           $arrowHead = @(
-              (New-Object System.Drawing.PointF(155, 180)),
-              (New-Object System.Drawing.PointF(171, 180)),
-              (New-Object System.Drawing.PointF(163, 165))
+              (New-Object System.Drawing.PointF(155, 198)),
+              (New-Object System.Drawing.PointF(175, 205)),
+              (New-Object System.Drawing.PointF(160, 180))
           )
           $g.FillPolygon([System.Drawing.Brushes]::White, $arrowHead)
 
-          # Cleanup and save
-          $screenPen.Dispose()
+          # Cleanup
+          $framePen.Dispose()
+          $shadowBrush.Dispose()
+          $skyBrush.Dispose()
           $arrowPen.Dispose()
-          $sunBrush.Dispose()
-          $mountainPath.Dispose()
           $bgPath.Dispose()
           $bgBrush.Dispose()
           $g.Dispose()
 
+          # Save as ICO
           $iconHandle = $bitmap.GetHicon()
           $icon = [System.Drawing.Icon]::FromHandle($iconHandle)
           $fs = [System.IO.File]::Create($icoPath)
