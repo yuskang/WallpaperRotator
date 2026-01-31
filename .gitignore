@@ -10,6 +10,12 @@ tests/
 # Local config
 CLAUDE.md
 
+# Local docs
+docs/
+
+# Generated icons
+src/WallpaperRotator/Resources/icons/
+
 # IDE
 .vs/
 .vscode/
